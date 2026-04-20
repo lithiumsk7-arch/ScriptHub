@@ -1,41 +1,41 @@
 # ScriptSausage
 
-ScriptSausage 是一個基於 Python 與 Tkinter 打造的跨平台腳本管理與執行工具。它可以幫助你將各式各樣的 `.py`, `.bat`, `.cmd`, `.ps1`, `.exe` 集中管理在同一個介面中，並支援動態參數設定。
+ScriptSausage is a cross-platform script management and execution tool built with Python and Tkinter. It helps you centrally manage and execute various scripts (`.py`, `.bat`, `.cmd`, `.ps1`, `.exe`) in a single interface, with support for dynamic parameter configuration.
 
 ## Example use cases
 - Running repetitive local scripts without remembering commands
 - Managing small personal utilities in one place
 - Quickly testing scripts with different parameters
 
-## 專案結構
+## Project Structure
 
 ```
 ScriptSausage/
-├── scriptsausage/           # 主程式套件
-│   ├── main.py          # 核心 UI 與執行邏輯
-│   └── ScriptSausage.json      # 自動儲存的設定檔 (執行後產生)
-├── tests/               # 測試用程式與實驗腳本
-│   ├── fixtures/        # 給主程式測試用的假腳本 (.bat, .py)
-│   └── test_*.py        # 包含 POSIX 參數解析、Undo/Redo 等底層實驗腳本
-├── docs/                # 專案文件
-│   └── spec.md          # 需求與架構規格書
-├── run.py               # 程式進入點
-├── .gitignore           # 忽略暫存檔與編譯檔
-└── README.md            # 專案說明
+├── scriptsausage/           # Main application package
+│   ├── main.py              # Core UI and execution logic
+│   └── ScriptSausage.json   # Auto-saved configuration file (generated after execution)
+├── tests/                   # Testing and experimental scripts
+│   ├── fixtures/            # Mock scripts for testing (.bat, .py)
+│   └── test_*.py            # Underlying experimental scripts for POSIX parsing, Undo/Redo, etc.
+├── docs/                    # Project documentation
+│   └── spec.md              # Requirements and architecture specification
+├── run.py                   # Application entry point
+├── .gitignore               # Ignored temporary and compiled files
+└── README.md                # Project description
 ```
 
-## 功能特色
-- **集中管理**：透過 Notebook 頁籤管理大量腳本，支援滑鼠滾輪快速切換頁籤。
-- **支援多種執行環境**：自動辨識 `.py`, `.bat`, `.ps1`、`.exe` 並以獨立終端機視窗執行。
-- **視覺化與防呆**：
-  - 根據副檔名動態改變「執行」按鈕顏色的科技感 UI。
-  - 路徑若不存在會自動標紅並鎖死執行按鈕。
-- **強健的快捷鍵支援**：為所有輸入框加入全域的 `Ctrl+C/V/X` 以及 50 步防呆歷史紀錄的 `Ctrl+Z` (復原) 與 `Ctrl+Y` (重做)。
-- **進階參數高亮**：進階編輯視窗內建 Regex 語法高亮 (Syntax Highlighting)，自動標色 `--flag` 與 `"字串"`。
-- **全自動即時儲存**：無需手動點擊，任何打字與設定變更皆會在背景「零干擾」自動存入 `ScriptSausage.json` (綠色版設計)。
+## Features
+- **Centralized Management**: Manage a large number of scripts through Notebook tabs, supporting mouse wheel scrolling for quick tab switching.
+- **Multi-Environment Support**: Automatically identifies `.py`, `.bat`, `.ps1`, and `.exe` files and executes them in independent terminal windows.
+- **Visuals and Error Prevention**:
+  - A modern UI that dynamically changes the color of the "Run" button based on the file extension.
+  - If a path does not exist, it will automatically be highlighted in red, and the run button will be disabled.
+- **Robust Shortcut Support**: Global `Ctrl+C/V/X` support for all input fields, along with a 50-step error-proof history for `Ctrl+Z` (Undo) and `Ctrl+Y` (Redo).
+- **Advanced Parameter Highlighting**: The advanced editing window features built-in Regex syntax highlighting, automatically coloring `--flags` and `"strings"`.
+- **Zero-Friction Auto-Save**: No manual clicking required. Any typing or configuration changes are automatically and silently saved to `ScriptSausage.json` in the background (portable design).
 
-## 如何執行
-請確保已安裝 Python 3.11 或以上版本，在專案根目錄下執行：
+## How to Run
+Please ensure that Python 3.11 or above is installed. Execute the following in the project root directory:
 ```bash
 python run.py
 ```

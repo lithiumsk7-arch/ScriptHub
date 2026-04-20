@@ -1,67 +1,74 @@
-# Script Sausage 統一腳本呼叫介面 規格書
+# Script Sausage Unified Script Interface Specification
 
-## 1. 專案概述
-- **目的**：提供一個具備多頁籤功能的統一 UI 介面，解決多個專案中 `.py`、`.exe`、`.bat` 等腳本檔案分散各處、難以尋找與管理的問題。
-- **目標作業系統**：Windows。
+## 1. Project Overview
+- **Objective**: Provide a unified UI with multi-tab functionality to solve the problem of scattered `.py`, `.exe`, `.bat` scripts across multiple projects, making them hard to find and manage.
+- **Target OS**: Windows.
 
-## 2. 核心功能需求
+## 2. Core Functional Requirements
 
-### 2.1 多頁籤管理 (Tab Management)
-- **多頁籤模式**：使用者可建立多個頁籤來分類與管理腳本。
-- **頁籤操作**：
-  - **新增**：可建立新的空白頁籤。
-  - **修改/重命名**：支援滑鼠雙擊 (Double Click) 頁籤標籤，或透過點擊右鍵選單進行重新命名。
-  - **複製**：可完整複製現有頁籤（包含其內部的所有腳本與參數設定）。
-  - **刪除**：移除指定的頁籤（亦可透過右鍵選單呼叫）。
-  - **排序**：支援以滑鼠左鍵按住拖拉 (Drag & Drop) 的方式調整頁籤的顯示順序。
-  - **切換**：除了點擊外，將滑鼠懸停於頁籤列並使用「滑鼠滾輪」即可快速切換前後頁籤。
+### 2.1 Tab Management
+- **Multi-Tab Mode**: Users can create multiple tabs to categorize and manage scripts.
+- **Tab Operations**:
+  - **Add**: Create a new blank tab.
+  - **Modify/Rename**: Support double-clicking the tab label or right-clicking to open a menu for renaming.
+  - **Duplicate**: Completely clone an existing tab (including all scripts and parameter settings inside).
+  - **Delete**: Remove the specified tab (also accessible via right-click menu).
+  - **Sort**: Support Drag & Drop using the left mouse button to adjust the display order of tabs.
+  - **Switch**: In addition to clicking, hovering the mouse over the tab bar and using the "mouse wheel" allows quick switching between tabs.
 
-### 2.2 腳本管理 (Script Management)
-- **腳本列表**：每個頁籤內可管理多個腳本，列表介面上需顯示該腳本的「名稱」。
-- **新增/修改腳本**：
-  - 支援使用「檔案選擇器 (File Picker)」指定本機檔案位置。
-  - 支援直接「文字輸入/編輯」檔案路徑 (具備等寬 Consolas 字體與完整 Undo/Redo)。
-- **腳本操作**：使用者可隨意新增、刪除、編輯清單內的腳本。
-- **排序**：支援點擊「上下箭頭按鈕」來調整腳本在該頁籤內的排列順序。
-- **列表捲動**：當頁籤內腳本數量過多而超出視窗高度時，支援全域滑鼠滾輪 (Mouse Wheel) 上下捲動，並具備智慧判斷機制以避開文字輸入框與內建捲軸的滾動衝突。
+### 2.2 Script Management
+- **Script List**: Manage multiple scripts within each tab. The interface must display the "Name" of the script.
+- **Add/Modify Script**:
+  - Support using a "File Picker" to specify local file locations.
+  - Support direct "text input/editing" of file paths (with monospaced Consolas font and full Undo/Redo).
+- **Script Operations**: Users can freely add, delete, and edit scripts in the list.
+- **Sort**: Support clicking "Up/Down arrow buttons" to adjust the arrangement of scripts within the tab.
+- **List Scrolling**: When the number of scripts exceeds the window height, global mouse wheel scrolling is supported, featuring an intelligent mechanism to avoid scroll conflicts with text input fields and built-in scrollbars.
 
-### 2.3 參數編輯與處理 (Parameter Handling)
-- **參數輸入區塊**：點擊腳本後，可編輯其參數。每個腳本配備 **3 個獨立的文字輸入框** 以及 **1 個 `...` (進階編輯) 按鈕**。
-- **參數輸入邏輯**：
-  - 文字輸入框：允許輸入包含空白的字串，支援 `Ctrl+Z` 等全域編輯快捷鍵。
-  - `...` 進階編輯視窗：點擊後彈出獨立的文字編輯視窗。為防呆設計，不論是點擊儲存按鈕，或是直接點擊右上角 `X` 關閉視窗，皆會自動把輸入內容回傳並觸發保存。
-- **參數合併**：執行時，這 3 個文字輸入框的內容會與 `...` 編輯視窗內的參數「合併」，作為該腳本的最終輸入。
-- **路徑與相容性處理**：
-  - **環境變數展開**：支援輸入如 `%APPDATA%`，執行前會透過 `os.path.expandvars()` 將其展開為實體路徑。
-  - **Windows 業界標準解析**：在 Windows 上，為避免 `shlex` 破壞複雜的雙引號結構，系統會直接將基礎指令轉為字串並拼接原始參數，交由底層 `CreateProcess` 進行最原汁原味的解析。確保如 `--par1 "00"` 這種語法能被完美傳遞。
+### 2.3 Parameter Handling
+- **Parameter Input Block**: After clicking a script, its parameters can be edited. Each script is equipped with **3 independent text input fields** and **1 `...` (Advanced Edit) button**.
+- **Parameter Input Logic**:
+  - Text input fields: Allow strings containing spaces, supporting global editing shortcuts like `Ctrl+Z`.
+  - `...` Advanced Edit Window: Pops up an independent text editing window. As a foolproof design, whether clicking the save button or closing the window via the top-right `X`, the input content will automatically be returned and trigger a save.
+- **Parameter Merging & Protection**: 
+  - During execution, the content of the 3 text input fields will be "merged" with the parameters in the `...` editing window as the final input for the script.
+  - **Newline Protection**: Newlines inside the advanced editor are permitted for formatting readability. Right before execution, all newlines are internally replaced with spaces to prevent `cmd.exe` from interpreting them as command delimiters, avoiding parameter truncation.
+- **Path and Compatibility Handling**:
+  - **Environment Variable Expansion**: Supports inputs like `%APPDATA%`, which will be expanded to physical paths via `os.path.expandvars()` before execution.
+  - **Windows Standard Parsing**: On Windows, to prevent `shlex` from breaking complex double-quote structures, the system directly converts the base command to a string, appends raw parameters, and hands it over to the underlying `CreateProcess` for the most authentic parsing. Ensures syntax like `--par1 "00"` is passed perfectly.
 
-### 2.4 執行與回饋 (Execution & Feedback)
-- **視覺化執行按鈕**：位於每行最左側的大型執行按鈕，會根據檔案的副檔名動態變換科技感顏色（如 Python 藍色、Batch 橘色、PS1 紫色等）。
-- **執行腳本**：點選腳本對應的「執行」按鍵，程式將直接呼叫該腳本，並帶入預先編輯好的合併參數。並加入 50ms 的延遲以防止 Tkinter UI 焦點鎖死。
-- **指令確認**：每次按下執行鈕後，UI 底部的駭客風格 (黑底綠字) 日誌面板必須顯示 **最終傳遞給 Shell 的完整指令 (Raw Command)**。
+### 2.4 Execution & Feedback
+- **Visual Run Button**: A large run button on the far left of each row dynamically changes to high-tech colors based on the file extension (e.g., Python blue, Batch orange, PS1 purple, etc.).
+- **Execute Script**: Clicking the "Run" button directly invokes the script, passing in the pre-edited merged parameters. A 50ms delay is added to prevent Tkinter UI focus locking.
+- **Command Confirmation**: After pressing the run button, the hacker-style (green text on black background) log panel at the bottom UI must display the **final Raw Command passed to the Shell**.
 
-### 2.5 狀態保存 (State Persistence)
-- **全自動即時儲存**：無需手動點擊儲存按鈕。只要有任何文字欄位變更、排序變動或是勾選狀態改變，系統都會在背景自動覆寫設定檔，達到零干擾的 UX。
-- **儲存位置**：設定檔 (`ScriptSausage.json`) 採用「綠色版 (Portable) 策略」，強制綁定於專案根目錄（或打包後的 `.exe` 同目錄下），確保軟體可攜性。
+### 2.5 State Persistence
+- **Zero-Friction Auto-Save**: No need to manually click a save button. Any text field change, sorting change, or checkbox state change automatically overwrites the config file in the background, achieving a zero-friction UX.
+- **Save Location**: The configuration file (`ScriptSausage.json`) adopts a "Portable strategy", strictly bound to the project root directory (or the same directory as the packaged `.exe`), ensuring software portability.
 
-### 2.6 錯誤處理與進階參數防呆 (Error Handling & Parameter Validation)
-- **拒絕 Shell Injection (命令注入) 實作**：
-  - 底層嚴格使用 `subprocess.Popen(..., shell=False)`。將參數作為安全的陣列 (Linux) 或受保護的字串 (Windows) 傳遞，阻絕特殊字元引發惡意執行。
-- **檔案存在與副檔名防呆**：
-  - 即時動態檢查：輸入路徑時，若檔案不存在，路徑文字會立刻變為「紅色」，同時「執行按鈕」會被強制反灰鎖定 (Disabled)。若副檔名為未知類型，則給予警告。
-- **進階輸入區語法突顯 (Syntax Highlighting)**：
-  - 在 `...` 的 `Text` 編輯區域內，即時套用正則表達式 (Regex) 來高亮標記：以 `--` 或 `-` 開頭的 Flag (藍色粗體)、被 `""` 或 `''` 包圍的字串 (綠色)。
-- **全域智能快捷鍵**：
-  - 攔截並強化 Tkinter 的預設行為，使所有輸入框完美支援 `Ctrl+C/V/X/A` 以及 50 步防呆歷史紀錄的 `Ctrl+Z` (Undo) 和 `Ctrl+Y` (Redo)。
-- **執行狀態捕捉**：
-  - 若腳本執行崩潰或拋錯，主程式會捕捉 Exception 並記錄於底層 Debug 面板。
-  - *(備註：強制停止執行中腳本之按鈕目前尚未實作，現階段依賴開啟的獨立終端機視窗自行手動關閉)*。
-- **終端機輸出與編碼防呆**：
-  - 針對 Windows 環境加入 `creationflags=subprocess.CREATE_NEW_CONSOLE` 參數，確保每一個腳本都在乾淨且獨立的新終端機視窗執行，避免 stdout 互相干擾。
+### 2.6 Error Handling & Parameter Validation
+- **Reject Shell Injection Implementation**:
+  - The underlying layer strictly uses `subprocess.Popen(..., shell=False)`. Parameters are passed as a safe array (Linux) or protected string (Windows) to block malicious execution from special characters.
+- **File Existence and Extension Validation**:
+  - Real-time dynamic checking: When entering a path, if the file doesn't exist, the path text immediately turns "red", and the "Run" button is forcefully disabled (grayed out). If the extension is unknown, a warning is given.
+- **Advanced Input Area Syntax Highlighting**:
+  - In the `...` `Text` editing area, regular expressions (Regex) are applied in real-time to highlight: Flags starting with `--` or `-` (blue bold), and strings wrapped in `""` or `''` (green).
+- **Global Smart Shortcuts**:
+  - Intercepts and enhances default Tkinter behaviors, perfectly supporting `Ctrl+C/V/X/A` and a 50-step error-proof history for `Ctrl+Z` (Undo) and `Ctrl+Y` (Redo) across all input fields.
+- **Execution State Capture**:
+  - If a script execution crashes or throws an error, the main program catches the Exception and logs it to the bottom Debug panel.
+  - *(Note: A button to forcibly stop a running script is not currently implemented; it relies on manually closing the independent terminal window for now).*
+- **Terminal Output and Encoding Validation**:
+  - For Windows environments, the `creationflags=subprocess.CREATE_NEW_CONSOLE` parameter is added to ensure each script runs in a clean, independent new terminal window, avoiding stdout interference.
 
-## 3. 使用者操作流程 (UX Flow)
-1. **啟動程式**：透過 `run.py` 或打包的 EXE 啟動，自動從同目錄下的 `ScriptSausage.json` 讀取並還原狀態。
-2. **設定腳本**：在特定頁籤中新增腳本 -> 透過檔案選擇器或輸入框載入 `run_task.bat` -> 填寫參數欄位 -> 如有需要，點擊 `...` 貼上並享有高亮顯示的進階設定字串。
-3. **拖拉整理**：點擊上下箭頭調整腳本順序；拖拉頁籤標籤調整左右順序。
-4. **執行與檢視**：點擊左側醒目的彩色執行鍵 -> 介面底部日誌顯示完整 CLI 指令 -> 獨立終端機視窗彈出並開始執行。
-5. **即時儲存**：所有動作皆已在背景瞬間存檔，隨時關閉程式皆不怕資料遺失。
+### 2.7 UI & UX Modernization
+- **Bilingual Support (EN/中)**: The application features a real-time, zero-restart toggle button allowing users to switch between English and Traditional Chinese UI instantly using Tkinter's `StringVar` reactive data binding.
+- **Modern Typography**: Utilizes `Segoe UI Variable Display` (Windows 11 standard fallback to Segoe UI) for all global UI labels and buttons to ensure a clean, airy, and modern aesthetic. Code input fields and the debug log use `Cascadia Mono` for a professional developer-tool feel.
+- **Concise Terminology**: UI labels are designed to be as short and actionable as possible (e.g. `P1:`, `...`, `Rename`) to reduce visual clutter while remaining intuitive.
+
+## 3. UX Flow
+1. **Launch Program**: Start via `run.py` or the packaged EXE, automatically reading and restoring state from `ScriptSausage.json` in the same directory.
+2. **Setup Script**: Add a script in a specific tab -> load `run_task.bat` via the file picker or input box -> fill in parameter fields -> if needed, click `...` to paste advanced config strings with syntax highlighting.
+3. **Drag & Drop Organization**: Click up/down arrows to adjust script order; drag tab labels to adjust horizontal order.
+4. **Execute and View**: Click the prominent colored run button on the left -> the log at the bottom displays the full CLI command -> an independent terminal window pops up and begins execution.
+5. **Real-time Save**: All actions are instantly saved in the background; you can close the program anytime without fear of data loss.

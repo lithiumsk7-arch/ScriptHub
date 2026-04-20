@@ -9,16 +9,16 @@ import sys
 import datetime
 
 if getattr(sys, 'frozen', False):
-    # 打包成 .exe 時，放在 .exe 所在的資料夾 (綠色免安裝版模式)
+    # When packaged as .exe, place in the same folder as .exe (portable mode)
     BASE_DIR = os.path.dirname(sys.executable)
 else:
-    # 開發模式下，放在專案根目錄 (也就是 run.py 旁邊，不要塞在 scripthub 裡面)
+    # In development mode, place in the project root directory (next to run.py)
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 CONFIG_FILE = os.path.join(BASE_DIR, "ScriptSausage.json")
 
 def make_text_widgets_smart(root):
-    """為全域的 Entry 與 Text 元件綁定 Undo/Redo 與剪貼簿快捷鍵"""
+    """Bind Undo/Redo and clipboard shortcuts for global Entry and Text widgets"""
     def do_copy(event):
         try:
             event.widget.clipboard_clear()
@@ -137,17 +137,17 @@ def make_text_widgets_smart(root):
 import re
 
 class AdvancedParamDialog(tk.Toplevel):
-    def __init__(self, parent, initial_text, callback):
+    def __init__(self, parent, initial_text, callback, app):
         super().__init__(parent)
-        self.title("進階參數編輯")
+        self.title(app.lang_vars["adv_title"].get())
         self.geometry("400x300")
         self.callback = callback
         
-        self.text = tk.Text(self, wrap=tk.WORD, font=("Consolas", 10))
+        self.text = tk.Text(self, wrap=tk.WORD, font=("Cascadia Mono", 11))
         self.text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         self.text.insert(tk.END, initial_text)
         
-        self.text.tag_config("flag", foreground="#0277bd", font=("Consolas", 10, "bold"))
+        self.text.tag_config("flag", foreground="#0277bd", font=("Cascadia Mono", 11, "bold"))
         self.text.tag_config("string", foreground="#2e7d32")
         
         self.text.bind("<KeyRelease>", self.highlight_syntax)
@@ -156,8 +156,8 @@ class AdvancedParamDialog(tk.Toplevel):
         
         btn_frame = ttk.Frame(self)
         btn_frame.pack(fill=tk.X, pady=5)
-        ttk.Button(btn_frame, text="儲存", command=self.save).pack(side=tk.RIGHT, padx=5)
-        ttk.Button(btn_frame, text="取消", command=self.destroy).pack(side=tk.RIGHT)
+        ttk.Button(btn_frame, textvariable=app.lang_vars["save"], command=self.save).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(btn_frame, textvariable=app.lang_vars["cancel"], command=self.destroy).pack(side=tk.RIGHT)
         
         self.transient(parent)
         self.grab_set()
@@ -192,7 +192,7 @@ class ScriptRow(ttk.Frame):
         self.adv_param_text = self.data.get("adv_p", "")
         
         # Grid layout
-        self.grid_columnconfigure(5, weight=1) # 讓路徑欄位伸展
+        self.grid_columnconfigure(5, weight=1) # Let the path column stretch
         
         # Col 0: Up/Down
         ctrl_frame = ttk.Frame(self)
@@ -201,47 +201,47 @@ class ScriptRow(ttk.Frame):
         ttk.Button(ctrl_frame, text="▼", width=2, command=self.move_down).pack()
         
         # Col 1: Big Run Button
-        self.run_btn = ttk.Button(self, text="▶ 執行", command=self.run_script, width=8)
+        self.run_btn = ttk.Button(self, textvariable=self.app.lang_vars["run"], command=self.run_script, width=8)
         self.run_btn.grid(row=0, column=1, rowspan=2, sticky="ns", padx=(2, 5), pady=2, ipadx=2, ipady=8)
         
         # Row 0, Col 2-7
-        ttk.Label(self, text="名稱:").grid(row=0, column=2, sticky="e", padx=(2,1))
+        ttk.Label(self, textvariable=self.app.lang_vars["name"]).grid(row=0, column=2, sticky="e", padx=(2,1))
         self.name_var = tk.StringVar(value=self.data.get("name", ""))
         ttk.Entry(self, textvariable=self.name_var, width=15).grid(row=0, column=3, sticky="w", padx=1, pady=1)
         
-        ttk.Label(self, text="路徑:").grid(row=0, column=4, sticky="e", padx=(2,1))
+        ttk.Label(self, textvariable=self.app.lang_vars["path"]).grid(row=0, column=4, sticky="e", padx=(2,1))
         self.path_var = tk.StringVar(value=self.data.get("path", ""))
-        self.path_entry = ttk.Entry(self, textvariable=self.path_var, font=("Consolas", 9))
+        self.path_entry = ttk.Entry(self, textvariable=self.path_var, font=("Cascadia Mono", 10))
         self.path_entry.grid(row=0, column=5, sticky="we", padx=1, pady=1)
         
-        ttk.Button(self, text="瀏覽...", width=8, command=self.browse_file).grid(row=0, column=6, padx=1, pady=1)
-        ttk.Button(self, text="刪除", width=6, command=self.delete_self).grid(row=0, column=7, padx=(5,1), pady=1)
+        ttk.Button(self, textvariable=self.app.lang_vars["browse"], width=8, command=self.browse_file).grid(row=0, column=6, padx=1, pady=1)
+        ttk.Button(self, textvariable=self.app.lang_vars["delete"], width=6, command=self.delete_self).grid(row=0, column=7, padx=(5,1), pady=1)
         
         # Row 1, Col 2-7
         params_frame = ttk.Frame(self)
         params_frame.grid(row=1, column=2, columnspan=4, sticky="w", pady=0)
         
-        ttk.Label(params_frame, text="參數 1:").pack(side=tk.LEFT, padx=(2,1))
+        ttk.Label(params_frame, textvariable=self.app.lang_vars["p1"]).pack(side=tk.LEFT, padx=(2,1))
         self.p1_var = tk.StringVar(value=self.data.get("p1", ""))
-        ttk.Entry(params_frame, textvariable=self.p1_var, width=12, font=("Consolas", 9)).pack(side=tk.LEFT, padx=1)
+        ttk.Entry(params_frame, textvariable=self.p1_var, width=12, font=("Cascadia Mono", 10)).pack(side=tk.LEFT, padx=1)
         
-        ttk.Label(params_frame, text="參數 2:").pack(side=tk.LEFT, padx=(2,1))
+        ttk.Label(params_frame, textvariable=self.app.lang_vars["p2"]).pack(side=tk.LEFT, padx=(2,1))
         self.p2_var = tk.StringVar(value=self.data.get("p2", ""))
-        ttk.Entry(params_frame, textvariable=self.p2_var, width=12, font=("Consolas", 9)).pack(side=tk.LEFT, padx=1)
+        ttk.Entry(params_frame, textvariable=self.p2_var, width=12, font=("Cascadia Mono", 10)).pack(side=tk.LEFT, padx=1)
         
-        ttk.Label(params_frame, text="參數 3:").pack(side=tk.LEFT, padx=(2,1))
+        ttk.Label(params_frame, textvariable=self.app.lang_vars["p3"]).pack(side=tk.LEFT, padx=(2,1))
         self.p3_var = tk.StringVar(value=self.data.get("p3", ""))
-        ttk.Entry(params_frame, textvariable=self.p3_var, width=12, font=("Consolas", 9)).pack(side=tk.LEFT, padx=1)
+        ttk.Entry(params_frame, textvariable=self.p3_var, width=12, font=("Cascadia Mono", 10)).pack(side=tk.LEFT, padx=1)
         
-        ttk.Button(params_frame, text="進階...", width=8, command=self.open_adv_params).pack(side=tk.LEFT, padx=5)
+        ttk.Button(params_frame, textvariable=self.app.lang_vars["adv"], width=8, command=self.open_adv_params).pack(side=tk.LEFT, padx=5)
         
         action_frame = ttk.Frame(self)
         action_frame.grid(row=1, column=6, columnspan=2, sticky="e", pady=0)
         
         self.pause_var = tk.BooleanVar(value=self.data.get("pause", False))
-        ttk.Checkbutton(action_frame, text="執行後保留視窗", variable=self.pause_var, command=self.app.save_state).pack(side=tk.LEFT, padx=2)
+        ttk.Checkbutton(action_frame, textvariable=self.app.lang_vars["keep"], variable=self.pause_var, command=self.app.save_state).pack(side=tk.LEFT, padx=2)
         
-        # 加個底線分隔 (視覺更好看)
+        # Add a separator for better visuals
         ttk.Separator(self, orient=tk.HORIZONTAL).grid(row=2, column=0, columnspan=8, sticky="we", pady=1)
 
         self.pack(fill=tk.X, pady=1, padx=2)
@@ -288,10 +288,10 @@ class ScriptRow(ttk.Frame):
         def save_adv(text):
             self.adv_param_text = text
             self.app.save_state()
-        AdvancedParamDialog(self, self.adv_param_text, save_adv)
+        AdvancedParamDialog(self, self.adv_param_text, save_adv, self.app)
 
     def delete_self(self):
-        if messagebox.askyesno("確認", "確定要刪除這個腳本設定嗎？"):
+        if messagebox.askyesno("Confirm", "Are you sure you want to delete this script?"):
             self.destroy()
             self.app.save_state()
 
@@ -325,13 +325,13 @@ class ScriptRow(ttk.Frame):
     def run_script(self):
         path = self.path_var.get().strip()
         if not path:
-            messagebox.showerror("錯誤", "尚未指定腳本路徑")
+            messagebox.showerror("Error", "Script path not specified")
             return
         
         path = os.path.expandvars(path)
         
         if not os.path.exists(path):
-            messagebox.showerror("錯誤", f"找不到檔案: {path}")
+            messagebox.showerror("Error", f"File not found: {path}")
             return
             
         ext = os.path.splitext(path)[1].lower()
@@ -349,29 +349,31 @@ class ScriptRow(ttk.Frame):
         elif ext == ".ps1":
             cmd_list.extend(["powershell", "-ExecutionPolicy", "Bypass", "-File"])
         elif ext != ".exe":
-            messagebox.showwarning("警告", f"未知的副檔名: {ext}，將嘗試直接執行")
+            messagebox.showwarning("Warning", f"Unknown extension: {ext}, will attempt to run directly")
             
         cmd_list.append(path)
         
-        params_str = f"{self.p1_var.get()} {self.p2_var.get()} {self.p3_var.get()} {self.adv_param_text}".strip()
+        # 避免進階編輯器中的換行符號截斷 cmd.exe 的指令，將所有換行替換為空白 (Convert newlines to spaces to prevent command truncation)
+        adv_p_safe = self.adv_param_text.replace('\n', ' ')
+        params_str = f"{self.p1_var.get()} {self.p2_var.get()} {self.p3_var.get()} {adv_p_safe}".strip()
         params_str = os.path.expandvars(params_str)
         
         if os.name == 'nt':
-            # Windows 業界標準解法：直接以字串合成指令，交給底層 CreateProcess 處理，避開 POSIX 轉換破壞雙引號的問題
+            # Windows standard solution: synthesize command directly as string to avoid POSIX conversion breaking quotes
             base_cmd_str = subprocess.list2cmdline(cmd_list)
             final_cmd = f"{base_cmd_str} {params_str}".strip()
         else:
-            # Linux/Mac 標準解法：使用 shlex.split 拆解參數成 List 給 execv
+            # Linux/Mac standard solution: use shlex.split to parse args into a list
             try:
                 if params_str:
                     args = shlex.split(params_str, posix=True)
                     cmd_list.extend(args)
                 final_cmd = cmd_list
             except ValueError as e:
-                messagebox.showerror("解析錯誤", f"參數引號不匹配: {e}\n請檢查是否漏打了雙引號。")
+                messagebox.showerror("Parse Error", f"Mismatched quotes in parameters: {e}\nPlease check if you missed a double quote.")
                 return
 
-        # 延遲 50ms 執行以避免 Tkinter 按鈕在瞬間開啟新視窗時被鎖死在 pressed 狀態
+        # Delay execution by 50ms to prevent Tkinter button getting stuck in pressed state
         self.after(50, lambda: self.app.show_log_and_run(final_cmd))
 
 class ScriptTab(ttk.Frame):
@@ -382,7 +384,7 @@ class ScriptTab(ttk.Frame):
         
         ctrl_frame = ttk.Frame(self)
         ctrl_frame.pack(side="top", fill="x", pady=2)
-        ttk.Button(ctrl_frame, text="➕ 新增腳本", command=self.add_script).pack(side="left", padx=5)
+        ttk.Button(ctrl_frame, textvariable=self.app.lang_vars["script_add"], command=self.add_script).pack(side="left", padx=5)
         
         canvas = tk.Canvas(self)
         scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
@@ -441,63 +443,92 @@ class ScriptSausageApp(tk.Tk):
         self.title("Script Sausage")
         self.geometry("900x700")
         
-        # 啟用全域智能快捷鍵 (支援 Ctrl+Z, Ctrl+Y, 剪貼簿等)
+        # Enable global smart shortcuts (supports Ctrl+Z, Ctrl+Y, clipboard, etc.)
         make_text_widgets_smart(self)
         
-        # 套用現代一點的 Theme (clam)
+        # Apply a modern theme (clam)
         style = ttk.Style(self)
+        
+        # UX Improvement: Set a modern default font for all UI elements
+        self.option_add("*Font", "{Segoe UI Variable Display} 10")
+        style.configure(".", font=("Segoe UI Variable Display", 10))
+        
         if "clam" in style.theme_names():
             style.theme_use("clam")
             
-        # 定義不同檔案類型的執行按鈕科技感樣式
-        style.configure("Py.TButton", background="#0277bd", foreground="white", font=("Segoe UI", 9, "bold"))
+        # Define high-tech styles for run buttons of different file types
+        style.configure("Py.TButton", background="#0277bd", foreground="white", font=("Segoe UI Variable Display", 10, "bold"))
         style.map("Py.TButton", background=[("active", "#039be5"), ("disabled", "#e0e0e0")], foreground=[("disabled", "#9e9e9e")])
         
-        style.configure("Bat.TButton", background="#ef6c00", foreground="white", font=("Segoe UI", 9, "bold"))
+        style.configure("Bat.TButton", background="#ef6c00", foreground="white", font=("Segoe UI Variable Display", 10, "bold"))
         style.map("Bat.TButton", background=[("active", "#f57c00"), ("disabled", "#e0e0e0")], foreground=[("disabled", "#9e9e9e")])
         
-        style.configure("Ps1.TButton", background="#4527a0", foreground="white", font=("Segoe UI", 9, "bold"))
+        style.configure("Ps1.TButton", background="#4527a0", foreground="white", font=("Segoe UI Variable Display", 10, "bold"))
         style.map("Ps1.TButton", background=[("active", "#512da8"), ("disabled", "#e0e0e0")], foreground=[("disabled", "#9e9e9e")])
         
-        style.configure("Exe.TButton", background="#2e7d32", foreground="white", font=("Segoe UI", 9, "bold"))
+        style.configure("Exe.TButton", background="#2e7d32", foreground="white", font=("Segoe UI Variable Display", 10, "bold"))
         style.map("Exe.TButton", background=[("active", "#388e3c"), ("disabled", "#e0e0e0")], foreground=[("disabled", "#9e9e9e")])
         
-        style.configure("DefaultRun.TButton", background="#424242", foreground="white", font=("Segoe UI", 9, "bold"))
+        style.configure("DefaultRun.TButton", background="#424242", foreground="white", font=("Segoe UI Variable Display", 10, "bold"))
         style.map("DefaultRun.TButton", background=[("active", "#616161"), ("disabled", "#e0e0e0")], foreground=[("disabled", "#9e9e9e")])
             
         self.protocol("WM_DELETE_WINDOW", self.on_close)
+
+        # I18N Setup
+        self.lang = "en"
+        self.texts = {
+            "en": {
+                "tab_add": "➕ Tab", "script_add": "➕ Script", "debug": "Debug", "py_interp": "Python:",
+                "name": "Name:", "path": "Path:", "p1": "P1:", "p2": "P2:", "p3": "P3:",
+                "browse": "Browse", "delete": "Delete", "run": "▶ Run", "adv": "...",
+                "keep": "Keep Open", "ready": "Ready", "save": "Save", "cancel": "Cancel",
+                "adv_title": "Advanced Parameters",
+            },
+            "zh": {
+                "tab_add": "➕ 頁籤", "script_add": "➕ 腳本", "debug": "除錯", "py_interp": "Python:",
+                "name": "名稱:", "path": "路徑:", "p1": "P1:", "p2": "P2:", "p3": "P3:",
+                "browse": "瀏覽", "delete": "刪除", "run": "▶ 執行", "adv": "...",
+                "keep": "保留視窗", "ready": "就緒", "save": "儲存", "cancel": "取消",
+                "adv_title": "進階參數編輯",
+            }
+        }
+        self.lang_vars = {k: tk.StringVar(value=self.texts[self.lang][k]) for k in self.texts["en"]}
+
         
-        # 上方工具列
+        # Top toolbar
         top_frame = ttk.Frame(self)
         top_frame.pack(fill=tk.X, padx=5, pady=5)
-        ttk.Button(top_frame, text="➕ 新增頁籤", command=self.add_tab).pack(side=tk.LEFT, padx=2)
-        # 移除手動儲存按鈕，因為系統全自動儲存，留著反而會誤導使用者以為需要手動點擊
+        ttk.Button(top_frame, textvariable=self.lang_vars["tab_add"], command=self.add_tab).pack(side=tk.LEFT, padx=2)
+        # Removed manual save button since system auto-saves
         
         self.debug_var = tk.BooleanVar(value=True)
-        ttk.Checkbutton(top_frame, text="Debug模式(顯示日誌)", variable=self.debug_var, command=self.toggle_debug_panel).pack(side=tk.LEFT, padx=10)
+        ttk.Checkbutton(top_frame, textvariable=self.lang_vars["debug"], variable=self.debug_var, command=self.toggle_debug_panel).pack(side=tk.LEFT, padx=10)
         
-        ttk.Label(top_frame, text="Python 直譯器:").pack(side=tk.LEFT, padx=(5, 2))
+        ttk.Label(top_frame, textvariable=self.lang_vars["py_interp"]).pack(side=tk.LEFT, padx=(5, 2))
         self.py_interpreter_var = tk.StringVar(value="python")
         self.py_combobox = ttk.Combobox(top_frame, textvariable=self.py_interpreter_var, values=self.get_available_pythons(), width=35)
         self.py_combobox.pack(side=tk.LEFT, padx=2)
         self.py_combobox.bind("<<ComboboxSelected>>", lambda e: self.save_state())
         self.py_combobox.bind("<FocusOut>", lambda e: self.save_state())
+
+        self.lang_btn = ttk.Button(top_frame, text="EN / 中", command=self.toggle_lang, width=8)
+        self.lang_btn.pack(side=tk.RIGHT, padx=5)
         
-        # 主佈局 (PanedWindow 分上下)
+        # Main layout (PanedWindow top/bottom)
         self.paned_window = ttk.PanedWindow(self, orient=tk.VERTICAL)
         self.paned_window.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
         self.notebook = ttk.Notebook(self.paned_window)
         self.paned_window.add(self.notebook, weight=3)
         
-        # 底部 Debug 面板
+        # Bottom Debug panel
         self.debug_frame = ttk.Frame(self.paned_window)
-        self.debug_text = scrolledtext.ScrolledText(self.debug_frame, bg="#1e1e1e", fg="#00ff00", height=8, font=("Consolas", 10))
+        self.debug_text = scrolledtext.ScrolledText(self.debug_frame, bg="#1e1e1e", fg="#00ff00", height=8, font=("Cascadia Mono", 11))
         self.debug_text.pack(fill=tk.BOTH, expand=True)
-        self.debug_text.insert(tk.END, "--- 系統日誌與執行輸出 ---\n")
+        self.debug_text.insert(tk.END, "--- System Logs and Execution Output ---\n")
         
-        # 狀態列
-        self.status_var = tk.StringVar(value="就緒")
+        # Status bar
+        self.status_var = tk.StringVar(value="Ready")
         self.status_bar = ttk.Label(self, textvariable=self.status_var, relief=tk.SUNKEN, anchor="w", padding=(5, 2))
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
         
@@ -506,11 +537,17 @@ class ScriptSausageApp(tk.Tk):
         self.notebook.bind("<B1-Motion>", self.move_tab)
         self.bind_all("<MouseWheel>", self.on_mousewheel)
         
-        # 初始化時先暫不存檔，避免覆蓋舊設定
+        # Do not save during initialization to avoid overwriting old settings
         self._disable_save = True
         self.load_state()
         self._disable_save = False
-        self.toggle_debug_panel() # 根據讀取的狀態決定是否顯示 panel
+        self.toggle_debug_panel() # Decide whether to show panel based on loaded state
+
+    def toggle_lang(self):
+        self.lang = "zh" if self.lang == "en" else "en"
+        for k, var in self.lang_vars.items():
+            var.set(self.texts[self.lang][k])
+        self.save_state()
 
     def toggle_debug_panel(self, *args):
         try:
@@ -528,9 +565,9 @@ class ScriptSausageApp(tk.Tk):
         try:
             clicked_tab_index = self.notebook.index(f"@{event.x},{event.y}")
             menu = tk.Menu(self, tearoff=0)
-            menu.add_command(label="重新命名此頁籤", command=lambda: self.rename_tab(clicked_tab_index))
-            menu.add_command(label="複製此頁籤", command=lambda: self.duplicate_tab(clicked_tab_index))
-            menu.add_command(label="刪除此頁籤", command=lambda: self.delete_tab(clicked_tab_index))
+            menu.add_command(label="Rename", command=lambda: self.rename_tab(clicked_tab_index))
+            menu.add_command(label="Duplicate", command=lambda: self.duplicate_tab(clicked_tab_index))
+            menu.add_command(label="Delete", command=lambda: self.delete_tab(clicked_tab_index))
             menu.post(event.x_root, event.y_root)
         except tk.TclError:
             pass
@@ -560,7 +597,7 @@ class ScriptSausageApp(tk.Tk):
         if isinstance(widget, (tk.Text, ttk.Scrollbar, tk.Scrollbar)):
             return
             
-        # 處理 Notebook 頁籤列滾動 (若滑鼠在 Notebook 的標籤區域)
+        # Handle Notebook tab bar scrolling
         if isinstance(widget, ttk.Notebook):
             try:
                 curr = widget.index("current")
@@ -583,7 +620,7 @@ class ScriptSausageApp(tk.Tk):
 
     def rename_tab(self, index):
         current_name = self.notebook.tab(index, "text")
-        new_name = tk.simpledialog.askstring("重新命名", "請輸入新頁籤名稱:", initialvalue=current_name)
+        new_name = tk.simpledialog.askstring("Rename", "Enter new tab name:", initialvalue=current_name)
         if new_name:
             self.notebook.tab(index, text=new_name)
             tab_widget = self.nametowidget(self.notebook.tabs()[index])
@@ -593,12 +630,12 @@ class ScriptSausageApp(tk.Tk):
     def duplicate_tab(self, index):
         tab_widget = self.nametowidget(self.notebook.tabs()[index])
         tab_data = json.loads(json.dumps(tab_widget.get_data()))
-        tab_data["name"] = f"{tab_data['name']} - 複製"
+        tab_data["name"] = f"{tab_data['name']} - Copy"
         self.add_tab(tab_data)
         self.save_state()
 
     def delete_tab(self, index):
-        if messagebox.askyesno("確認", "確定要刪除此頁籤與其包含的所有腳本嗎？"):
+        if messagebox.askyesno("Confirm", "Are you sure you want to delete this tab and all its scripts?"):
             self.notebook.forget(index)
             self.save_state()
 
@@ -613,6 +650,10 @@ class ScriptSausageApp(tk.Tk):
             try:
                 with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                     data = json.load(f)
+                    if "lang" in data:
+                        self.lang = data["lang"]
+                        for k, var in self.lang_vars.items():
+                            var.set(self.texts[self.lang][k])
                     if "debug" in data:
                         self.debug_var.set(data["debug"])
                     if "python_interpreter" in data:
@@ -625,7 +666,7 @@ class ScriptSausageApp(tk.Tk):
                         self.add_tab(tab_data)
                     return
             except Exception as e:
-                messagebox.showerror("讀取錯誤", f"無法讀取設定檔: {e}")
+                messagebox.showerror("Read Error", f"Cannot read config file: {e}")
         self.add_tab()
 
     def save_state(self, *args):
@@ -633,6 +674,7 @@ class ScriptSausageApp(tk.Tk):
             return
             
         data = {
+            "lang": self.lang,
             "debug": self.debug_var.get(),
             "python_interpreter": self.py_interpreter_var.get(),
             "tabs": []
@@ -646,11 +688,11 @@ class ScriptSausageApp(tk.Tk):
             json.dump(data, f, ensure_ascii=False, indent=2)
             
         now = datetime.datetime.now().strftime("%H:%M:%S")
-        self.status_var.set(f"✔️ 已自動儲存 ({now})")
+        self.status_var.set(f"✔️ Auto-saved ({now})")
         
         if hasattr(self, "_status_timer"):
             self.after_cancel(self._status_timer)
-        self._status_timer = self.after(3000, lambda: self.status_var.set("就緒"))
+        self._status_timer = self.after(3000, lambda: self.status_var.set("Ready"))
 
     def on_close(self):
         self.save_state()
@@ -671,16 +713,16 @@ class ScriptSausageApp(tk.Tk):
                     self.log_debug(f"[Process exited with code {process.returncode}]\n")
             except Exception as e:
                 if self.debug_var.get():
-                    self.log_debug(f"[執行發生錯誤] {e}\n")
+                    self.log_debug(f"[Execution Error] {e}\n")
                 else:
-                    messagebox.showerror("執行錯誤", f"無法執行指令:\n{e}")
+                    messagebox.showerror("Execution Error", f"Cannot execute command:\n{e}")
 
         if self.debug_var.get():
             if isinstance(cmd, list):
                 raw_cmd = " ".join(shlex.quote(c) for c in cmd)
             else:
                 raw_cmd = cmd
-            self.log_debug(f"> 執行指令: {raw_cmd}\n[腳本已在獨立的終端機視窗中啟動...]")
+            self.log_debug(f"> Executing command: {raw_cmd}\n[Script started in a new independent terminal window...]")
             
         threading.Thread(target=run_process, daemon=True).start()
         
